@@ -36,21 +36,24 @@ extend({
 });
 
 interface InfiniteCanvasProps {
-    children?: ReactNode;
     resizeTo?: RefObject<HTMLElement | null>;
 }
 
 
 export function InfiniteCanvas({
-    children, resizeTo
+    resizeTo
 } : Readonly<InfiniteCanvasProps>) {
     const { position, setPosition, mouseToCanvas } = useTransform();
-    const { showGrid } = useConfig();
+    const { showGrid, setApp, setContainerFrame } = useConfig();
     const { addNewWire, moveElement, elements, wires, checkOverlappingNodes } = useElements();
     const [isDragging, setIsDragging] = useState<"wire" | "drag" | false>(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [lastWire, setLastWire] = useState<{id: string, start: string, end: string}>();
     const applicationRef = useRef<ApplicationRef>(null);
+
+    useEffect(() => {
+        setApp(applicationRef.current);
+    }, [applicationRef]);
 
     const handlePointerDown = (e: FederatedMouseEvent) => {
         setIsDragging(e.shiftKey ? "wire" : "drag");
@@ -116,6 +119,7 @@ export function InfiniteCanvas({
         ref={applicationRef}
         resizeTo={resizeTo}
         background='#fff'
+        className='rounded'
         >
             {applicationRef.current && 
                 <pixiTilingSprite
@@ -135,36 +139,25 @@ export function InfiniteCanvas({
 					onPointerUpOutside={handlePointerUp}
                 />
             }
-            <pixiContainer x={position.x} y={position.y}>
+            <pixiContainer x={position.x} y={position.y} key='fjdfjsdjfdsk' ref={setContainerFrame}>
                 {
                     Object.values(wires).map((wire) => (
-                        <Wire key={wire.id}
-                        id={wire.id}
-                        />
+                        <Wire key={wire.id} id={wire.id} />
                     ))
                 }
                 {
                     Object.values(elements).map((element) => (
-                        <>
+                        <pixiContainer key={element.id}>
                             {element.type === "node" && (
-                                <WireNode
-                                id={element.id}
-                                key={element.id}
-                                />
+                                <WireNode id={element.id} />
                             )}
                             {element.type === "gate" && (
-                                <Gate
-                                key={element.id}
-                                id={element.id}
-                                />
+                                <Gate id={element.id} />
                             )}
                             {element.type === "label" && (
-                                <Label
-                                id={element.id}
-                                key={element.id}
-                                />
+                                <Label id={element.id} />
                             )}
-                        </>
+                        </pixiContainer>
                     ))
                 }
             </pixiContainer>

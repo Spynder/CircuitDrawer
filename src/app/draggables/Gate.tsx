@@ -90,6 +90,8 @@ export function Gate({
                 onPointerUpOutside={handlePointerUp}
             />
             <pixiText text={config.label} anchor={{x: 1, y: 0}} x={45} y={5}/>
+            <pixiText text={(config.inputs ?? "").split("").join('\n')} anchor={{x: 0, y: 0}} x={5} y={5} style={{lineHeight: 20, fontSize: 18}}/>
+            <pixiText text={(config.outputs ?? "").split("").join('\n')} anchor={{x: 1, y: 0}} x={45} y={5} style={{lineHeight: 20, fontSize: 18}}/>
 		</Element>
 	)
 }

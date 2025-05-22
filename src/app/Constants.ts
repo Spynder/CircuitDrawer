@@ -1,9 +1,16 @@
 
 export const GRID_SNAP = 10;
 export const WIRE_WIDTH = 2;
-export type GateType = "and" | "or" | "not" | "nand" | "nor";
+export type GateType = "and" | "or" | "not" | "nand" | "nor" | "D-trigger" | "JK-trigger";
 
-export const GateConfig = {
+interface GateDescription {
+    inverted: boolean;
+    label: string;
+    inputs?: string;
+    outputs?: string;
+}
+
+export const GateConfig: Record<GateType, GateDescription> = {
     "and": {
         inverted: false,
         label: "&"
@@ -23,5 +30,15 @@ export const GateConfig = {
     "nor": {
         inverted: true,
         label: "1"
+    },
+    "D-trigger": {
+        inverted: false,
+        label: "TT",
+        inputs: "S-DC-R",
+    },
+    "JK-trigger": {
+        inverted: false,
+        label: "TT",
+        inputs: "S-&J-C-&K-R",
     }
 }
