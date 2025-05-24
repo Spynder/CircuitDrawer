@@ -1,7 +1,9 @@
 
 export const GRID_SNAP = 10;
 export const WIRE_WIDTH = 2;
-export type GateType = "and" | "or" | "not" | "nand" | "nor" | "D-trigger" | "JK-trigger";
+export type GateType = "and" | "or" | "not" | "nand" | "nor" |
+    "D-trigger" | "JK-trigger" |
+    "SP" | "Inverter" | "Overflow" | "DC";
 
 interface LabelDescription {
     label: string;
@@ -15,7 +17,7 @@ interface GateDescription {
         inverted: boolean;
         y: number;
     }[];
-    label?: string;
+    name?: string;
     width: number;
     height: number;
     inputs?: {
@@ -37,6 +39,7 @@ export const GateConfig: Record<GateType, GateDescription> = {
                 y: 50
             }
         ],
+        name: "И",
         labels: [
             {
                 label: "&",
@@ -54,6 +57,7 @@ export const GateConfig: Record<GateType, GateDescription> = {
                 y: 50
             }
         ],
+        name: "ИЛИ",
         labels: [
             {
                 label: "1",
@@ -71,6 +75,7 @@ export const GateConfig: Record<GateType, GateDescription> = {
                 y: 50
             }
         ],
+        name: "НЕ",
         labels: [
             {
                 label: "1",
@@ -88,6 +93,7 @@ export const GateConfig: Record<GateType, GateDescription> = {
                 y: 50
             }
         ],
+        name: "И-НЕ",
         labels: [
             {
                 label: "&",
@@ -105,6 +111,7 @@ export const GateConfig: Record<GateType, GateDescription> = {
                 y: 50
             }
         ],
+        name: "ИЛИ-НЕ",
         labels: [
             {
                 label: "1",
@@ -144,6 +151,7 @@ export const GateConfig: Record<GateType, GateDescription> = {
                 y: 110
             }
         ],
+        name: "D-триггер",
         width: 100,
         height: 150,
         labels: [
@@ -195,6 +203,7 @@ export const GateConfig: Record<GateType, GateDescription> = {
                 y: 50
             }
         ],
+        name: "JK-триггер",
         width: 100,
         height: 200,
         labels: [
@@ -251,5 +260,204 @@ export const GateConfig: Record<GateType, GateDescription> = {
                 end: {x: 30, y: 160}
             }
         ]
+    },
+    "SP": {
+        outputs: [
+            {
+                inverted: false,
+                y: 30
+            },
+            {
+                inverted: false,
+                y: 70
+            }
+        ],
+        name: "SP",
+        width: 100,
+        height: 150,
+        labels: [
+            {
+                label: "S",
+                position: {x: 95, y: 5},
+                anchor: {x: 1, y: 0}
+            },
+            {
+                label: "P",
+                position: {x: 95, y: 145},
+                anchor: {x: 1, y: 1}
+            },
+            {
+                label: "SM",
+                position: {x: 40, y: 75},
+                anchor: {x: .5, y: .5}
+            }
+        ],
+        lines: [
+            {
+                start: {x: 75, y: 0},
+                end: {x: 75, y: 150}
+            },
+        ]
+    },
+    "Inverter": {
+        inputs: [
+            {
+                inverted: false,
+                y: 30
+            },
+            {
+                inverted: false,
+                y: 60
+            },
+            {
+                inverted: false,
+                y: 80
+            },
+            {
+                inverted: false,
+                y: 100
+            },
+            {
+                inverted: false,
+                y: 120
+            }
+        ],
+        name: "Пр",
+        outputs: [
+            {
+                inverted: false,
+                y: 60
+            },
+            {
+                inverted: false,
+                y: 80
+            },
+            {
+                inverted: false,
+                y: 100
+            },
+            {
+                inverted: false,
+                y: 120
+            }
+        ],
+        width: 100,
+        height: 150,
+        labels: [
+            {
+                label: "Пр",
+                position: {x: 50, y: 5},
+                anchor: {x: .5, y: 0}
+            }
+        ],
+    },
+    "Overflow": {
+        inputs: [
+            {
+                inverted: false,
+                y: 20
+            },
+            {
+                inverted: false,
+                y: 50
+            },
+            {
+                inverted: false,
+                y: 80
+            },
+        ],
+        name: "Пер",
+        outputs: [
+            {
+                inverted: false,
+                y: 50
+            }
+        ],
+        width: 50,
+        height: 100,
+        labels: [
+            {
+                label: "Пер",
+                position: {x: 25, y: 5},
+                anchor: {x: .5, y: 0}
+            }
+        ],
+    },
+    "DC": {
+        inputs: [
+            {
+                inverted: false,
+                y: 20
+            },
+            {
+                inverted: false,
+                y: 40
+            },
+            {
+                inverted: false,
+                y: 60
+            },
+            {
+                inverted: false,
+                y: 80
+            },
+
+            
+            {
+                inverted: false,
+                y: 120
+            },
+            {
+                inverted: false,
+                y: 140
+            },
+            {
+                inverted: false,
+                y: 160
+            },
+            {
+                inverted: false,
+                y: 180
+            },
+
+            
+            {
+                inverted: false,
+                y: 230
+            },
+        ],
+        outputs: [
+            {
+                inverted: false,
+                y: 20
+            },
+
+            {
+                inverted: false,
+                y: 170
+            },
+            {
+                inverted: false,
+                y: 190
+            },
+            {
+                inverted: false,
+                y: 210
+            },
+            {
+                inverted: false,
+                y: 230
+            },
+
+        ],
+        width: 150,
+        height: 250,
+        labels: [
+            {
+                label: "DC",
+                position: {x: 75, y: 5},
+                anchor: {x: .5, y: 0}
+            }
+        ],
     }
 }

@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { GRID_SNAP, GateConfig, GateType } from "../Constants";
 
 interface ElementParams {
@@ -18,7 +18,7 @@ export interface WireParams {
 }
 
 
-function snapPoint(point: {x: number, y: number}) {
+export function snapPoint(point: {x: number, y: number}) {
     return {
         x: Math.round(point.x / GRID_SNAP) * GRID_SNAP,
         y: Math.round(point.y / GRID_SNAP) * GRID_SNAP
@@ -38,6 +38,8 @@ const ElementsContext = createContext<{
     createGate: (type: GateType) => string,
     createLabel: (label: string) => string,
     cleanUp: (id: string) => void,
+    saveCircuit: () => string,
+    loadCircuit: (data: string) => void
 }>({
     elements: {},
     wires: {},
@@ -63,6 +65,8 @@ const ElementsContext = createContext<{
     createGate: () => "",
     createLabel: () => "",
     cleanUp: () => {},
+    saveCircuit: () => "",
+    loadCircuit: () => {}
 });
 
 function pointInRect(point: {x: number, y: number}, rect: {x: number, y: number, width: number, height: number}) {
@@ -105,10 +109,12 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
     }
 
     function moveElement(id: string, point: {x: number, y: number}) {
-        setElements((prev) => ({...prev, [id]: {
-            ...prev[id],
-            position: snapPoint(point),
-        }}));
+        setElements((prev) => {
+            let newElements = {...prev};
+            if(!newElements[id]) return prev;
+            newElements[id].position = snapPoint(point);
+            return newElements;
+        });
     }
 
     function editWire(id: string, start: string, end: string, startPort?: number, endPort?: number) {
@@ -193,16 +199,16 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
 
     function convertNodeToGateConnection(nodeID: string) {
         const nodeData = elements[nodeID];
-        if(!nodeData) return;
+        if(!nodeData || nodeData.type !== "node") return;
         const associatedWires = Object.values(wires).filter(x => x.start === nodeID || x.end === nodeID);
         for(let element of Object.values(elements)) {
             if(element.type === "gate") {
                 const gateConfig = GateConfig[element.gateType!];
                 const box = {
-                    x: element.position.x-10,
-                    y: element.position.y-10,
-                    width: gateConfig.width+20,
-                    height: gateConfig.height+20
+                    x: element.position.x,
+                    y: element.position.y,
+                    width: gateConfig.width,
+                    height: gateConfig.height
                 }
                 if(pointInRect(nodeData.position, box)) {
                     const connectionPoints = [];
@@ -236,7 +242,7 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
                         }
                     }
                     if(connectionPoints.length === 0) continue;
-                    const dist = (x1: number, y1: number) => Math.sqrt(x1 * x1 + y1 * y1);
+                    const dist = (x1: number, y1: number) => x1 * x1 + y1 * y1;
                     connectionPoints.sort((a, b) => {
                         return dist(
                             a.x - nodeData.position.x,
@@ -247,6 +253,7 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
                         );
                     })
                     const connection = connectionPoints[0];
+                    console.log(connection, connectionPoints, nodeData.position, box)
                     if(connection.type === "input") {
                         for(let wire of associatedWires) {
                             const from = wire.start;
@@ -302,6 +309,19 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         });
     }
 
+    const saveCircuit = useCallback(() => {
+        return JSON.stringify({
+            elements: elements,
+            wires: wires
+        });
+    }, [elements, wires]);
+
+    const loadCircuit = (data: string) => {
+        const parsed = JSON.parse(data);
+        setElements(parsed.elements);
+        setWires(parsed.wires);
+    }
+
     function createGate(type: GateType) {
         let uuid = crypto.randomUUID();
         const config = GateConfig[type];
@@ -338,7 +358,9 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         deleteWire,
         createGate,
         createLabel,
-        cleanUp
+        cleanUp,
+        saveCircuit,
+        loadCircuit
     }), [elements, wires]);
 
     return (

@@ -14,7 +14,7 @@ const STROKE_WIDTH = 2;
 export function Gate({
     id
 }: Readonly<GateProps>) {
-    const { elements, moveElement, deleteElement, addNewWire } = useElements();
+    const { elements, moveElement, deleteElement, addNewWire, cleanUp } = useElements();
     const { position } = useTransform();
     const config = GateConfig[elements[id].gateType!];
     
@@ -64,18 +64,29 @@ export function Gate({
     // Handle mouse up
     const handlePointerUp = (e: FederatedMouseEvent) => {
         setIsDragging(false);
-        e.stopPropagation();
+        // if(lastWire?.start)
+        //    cleanUp(lastWire.start);
+        if(lastWire?.end)
+            cleanUp(lastWire.end);
     };
 
     function drawInverted(g: Graphics, inverted: boolean) {
         g.clear();
-        g.circle(0, 0, 7);
-        g.fill("#ffffff");
-        g.stroke({
-            color: "#000000",
-            width: STROKE_WIDTH
-        });
-        if(!inverted) g.alpha = 0;
+        if(inverted) {
+            g.circle(0, 0, 7);
+            g.fill("#ffffff");
+            g.stroke({
+                color: "#000000",
+                width: STROKE_WIDTH
+            });
+        } else {
+            g.circle(0, 0, 2);
+            g.fill("#000000");
+            g.stroke({
+                color: "#000000",
+                width: STROKE_WIDTH
+            });
+        };
     }
 
 	return (

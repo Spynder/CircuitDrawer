@@ -143,7 +143,7 @@ export function InfiniteCanvas({
                 g.circle(0, 0, 8);
                 g.fill("ccc");
             }} />
-            <pixiContainer x={position.x} y={position.y} key='fjdfjsdjfdsk' ref={setContainerFrame}>
+            <pixiContainer x={position.x} y={position.y} ref={setContainerFrame}>
                 {
                     Object.values(wires).map((wire) => (
                         <Wire key={wire.id} id={wire.id} />

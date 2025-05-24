@@ -1,14 +1,10 @@
 import { FederatedMouseEvent, Graphics } from "pixi.js";
 import { useState } from "react";
-import { useElements, useTransform } from "../contexts";
+import { snapPoint, useElements, useTransform } from "../contexts";
 import { GateConfig, WIRE_WIDTH } from "../Constants";
 
 interface WireProps {
     id: string;
-}
-
-function lerp(a: number, b: number, t: number) {
-    return a + (b-a)*t;
 }
 
 export function Wire({
@@ -23,6 +19,10 @@ export function Wire({
     function draw(g: Graphics) {
         g.clear();
         const from = elements[wire.start];
+        if(!from) {
+            deleteWire(id);
+            return;
+        }
         let fromPosition = from.position;
         if(from.type === "gate") {
             const config = GateConfig[from.gateType!];
@@ -32,6 +32,10 @@ export function Wire({
             };
         }
         const to = elements[wire.end];
+        if(!to) {
+            deleteWire(id);
+            return;
+        }
         let toPosition = to.position;
         if(to.type === "gate") {
             const config = GateConfig[to.gateType!];
@@ -48,12 +52,11 @@ export function Wire({
                         y: to.position.y + config.height/2
                     };
                 } else {
-                    const startRange = config.height/4;
-                    const endRange = config.height-startRange;
+                    const startRange = config.height/2 - 10*(connectedWires.length-1)
+                    const index = connectedWires.findIndex(x => x.id === wire.id);
                     toPosition = {
                         x: to.position.x,
-                        y: to.position.y + lerp(startRange, endRange,
-                            connectedWires.findIndex(x => x.id === wire.id)/(connectedWires.length-1))
+                        y: to.position.y + startRange + 20*index
                     }
                 }
             }
