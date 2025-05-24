@@ -45,7 +45,7 @@ export function InfiniteCanvas({
 } : Readonly<InfiniteCanvasProps>) {
     const { position, setPosition, mouseToCanvas } = useTransform();
     const { showGrid, setApp, setContainerFrame } = useConfig();
-    const { addNewWire, moveElement, elements, wires, checkOverlappingNodes } = useElements();
+    const { addNewWire, moveElement, elements, wires, cleanUp } = useElements();
     const [isDragging, setIsDragging] = useState<"wire" | "drag" | false>(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [lastWire, setLastWire] = useState<{id: string, start: string, end: string}>();
@@ -95,10 +95,9 @@ export function InfiniteCanvas({
     const handlePointerUp = (e: FederatedMouseEvent) => {
         setIsDragging(false);
         if(lastWire?.start)
-            checkOverlappingNodes(lastWire.start);
+            cleanUp(lastWire.start);
         if(lastWire?.end)
-            checkOverlappingNodes(lastWire.end);
-        e.stopPropagation();
+            cleanUp(lastWire.end);
     };
 
     const [texture, setTexture] = useState(Texture.EMPTY)
@@ -134,11 +133,16 @@ export function InfiniteCanvas({
                     
                     eventMode={'static'}
                     onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
+                    onGlobalPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
 					onPointerUpOutside={handlePointerUp}
                 />
             }
+            <pixiGraphics x={position.x} y={position.y} draw={(g: Graphics) => {
+                g.clear();
+                g.circle(0, 0, 8);
+                g.fill("ccc");
+            }} />
             <pixiContainer x={position.x} y={position.y} key='fjdfjsdjfdsk' ref={setContainerFrame}>
                 {
                     Object.values(wires).map((wire) => (

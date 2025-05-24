@@ -12,7 +12,7 @@ export interface WireNodeProps {
 export function WireNode({
     id
 }: Readonly<WireNodeProps>) {
-    const { elements, wires, addNewWire, moveElement, checkOverlappingNodes, deleteElement } = useElements();
+    const { elements, wires, addNewWire, moveElement, cleanUp, deleteElement } = useElements();
     const { position } = useTransform();
 
     function draw(g: Graphics) {
@@ -56,12 +56,11 @@ export function WireNode({
     // Handle mouse up
     const handlePointerUp = (e: FederatedMouseEvent) => {
         setIsDragging(false);
-        checkOverlappingNodes(id);
+        cleanUp(id);
         if(lastWire?.start)
-            checkOverlappingNodes(lastWire.start);
+            cleanUp(lastWire.start);
         if(lastWire?.end)
-            checkOverlappingNodes(lastWire.end);
-        e.stopPropagation();
+            cleanUp(lastWire.end);
     };
 
 	return (

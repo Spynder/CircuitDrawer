@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { GRID_SNAP, GateType } from "../Constants";
+import { GRID_SNAP, GateConfig, GateType } from "../Constants";
 
 interface ElementParams {
     position: { x: number, y: number };
@@ -9,9 +9,11 @@ interface ElementParams {
     id: string;
 }
 
-interface WireParams {
+export interface WireParams {
     start: string,
-    end: string
+    startPort: number,
+    end: string,
+    endPort: number,
     id: string;
 }
 
@@ -27,15 +29,15 @@ const ElementsContext = createContext<{
     elements: { [key: string]: ElementParams },
     wires: { [key: string]: WireParams },
     createNode: (position: {x: number, y: number}) => string,
-    editWire: (id: string, start: string, end: string) => void,
-    addNewWire: (point: {x: number, y: number}, from?: string) => { start: string; end: string; id: string; },
+    editWire: (id: string, start: string, end: string, startPort?: number, endPort?: number) => void,
+    addNewWire: (point: {x: number, y: number}, from?: string, fromPort?: number) => WireParams,
     moveElement: (id: string, point: {x: number, y: number}) => void,
-    connectNewWire: (start: string, end: string) => { start: string; end: string; id: string; },
-    checkOverlappingNodes: (id: string) => boolean,
+    connectNewWire: (start: string, end: string, startPort?: number, endPort?: number) => WireParams,
     deleteElement: (id: string) => void,
     deleteWire: (id: string) => void,
     createGate: (type: GateType) => string,
     createLabel: (label: string) => string,
+    cleanUp: (id: string) => void,
 }>({
     elements: {},
     wires: {},
@@ -44,20 +46,29 @@ const ElementsContext = createContext<{
     addNewWire: () => ({
         start: "",
         end: "",
+        startPort: 0,
+        endPort: 0,
         id: ""
     }),
     moveElement: () => {},
     connectNewWire: () => ({
         start: "",
         end: "",
+        startPort: 0,
+        endPort: 0,
         id: ""
     }),
-    checkOverlappingNodes: () => false,
     deleteElement: () => {},
     deleteWire: () => {},
-    createGate: (type: GateType) => "",
-    createLabel: (label: string) => "",
+    createGate: () => "",
+    createLabel: () => "",
+    cleanUp: () => {},
 });
+
+function pointInRect(point: {x: number, y: number}, rect: {x: number, y: number, width: number, height: number}) {
+    return point.x >= rect.x && point.x <= rect.x + rect.width &&
+           point.y >= rect.y && point.y <= rect.y + rect.height;
+}
 
 export const ElementsProvider = ({ children }: { children: ReactNode }) => {
     const [elements, setElements] = useState<{[key: string]: ElementParams}>({});
@@ -73,18 +84,22 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         return uuid;
     }
 
-    function addNewWire(point: {x: number, y: number}, from?: string) {
+    function addNewWire(point: {x: number, y: number}, from?: string, fromPort?: number) {
         let start = from ?? createNode(point);
         let end = createNode(point);
         let wire = crypto.randomUUID();
         setWires((prev) => ({...prev, [wire]: {
             start: start,
+            startPort: fromPort ?? 0,
             end: end,
+            endPort: 0,
             id: wire
         }}));
         return {
             start: start,
+            startPort: fromPort ?? 0,
             end: end,
+            endPort: 0,
             id: wire
         };
     }
@@ -96,11 +111,13 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         }}));
     }
 
-    function editWire(id: string, start: string, end: string) {
+    function editWire(id: string, start: string, end: string, startPort?: number, endPort?: number) {
         setWires((prev) => ({...prev, [id]: {
             ...prev[id],
             start: start,
             end: end,
+            startPort: startPort ?? 0,
+            endPort: endPort ?? 0,
         }}));
     }
 
@@ -108,12 +125,16 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         let wire = crypto.randomUUID();
         setWires((prev) => ({...prev, [wire]: {
             start: start,
+            startPort: 0,
             end: end,
+            endPort: 0,
             id: wire
         }}));
         return {
             start: start,
+            startPort: 0,
             end: end,
+            endPort: 0,
             id: wire
         };
     }
@@ -154,9 +175,11 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
                         for(let wire of Object.values(newWires)) {
                             if(wire.start == nodeID) {
                                 newWires[wire.id].start = id;
+                                newWires[wire.id].startPort = 0;
                             }
                             if(wire.end == nodeID) {
                                 newWires[wire.id].end = id;
+                                newWires[wire.id].endPort = 0;
                             }
                         }
                         return newWires;
@@ -166,6 +189,95 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
             }
         }
         return false;
+    }
+
+    function convertNodeToGateConnection(nodeID: string) {
+        const nodeData = elements[nodeID];
+        if(!nodeData) return;
+        const associatedWires = Object.values(wires).filter(x => x.start === nodeID || x.end === nodeID);
+        for(let element of Object.values(elements)) {
+            if(element.type === "gate") {
+                const gateConfig = GateConfig[element.gateType!];
+                const box = {
+                    x: element.position.x-10,
+                    y: element.position.y-10,
+                    width: gateConfig.width+20,
+                    height: gateConfig.height+20
+                }
+                if(pointInRect(nodeData.position, box)) {
+                    const connectionPoints = [];
+                    if(gateConfig.inputs) {
+                        for(let i in gateConfig.inputs) {
+                            const input = gateConfig.inputs[i];
+                            connectionPoints.push({
+                                x: element.position.x,
+                                y: element.position.y + input.y,
+                                port: Number(i),
+                                type: "input"
+                            });
+                        }
+                    } else {
+                        connectionPoints.push({
+                            x: element.position.x,
+                            y: element.position.y+gateConfig.height/2,
+                            port: 0,
+                            type: "input"
+                        });
+                    }
+                    if(gateConfig.outputs) {
+                        for(let i in gateConfig.outputs) {
+                            const output = gateConfig.outputs[i];
+                            connectionPoints.push({
+                                x: element.position.x + gateConfig.width,
+                                y: element.position.y + output.y,
+                                port: Number(i),
+                                type: "output"
+                            });
+                        }
+                    }
+                    if(connectionPoints.length === 0) continue;
+                    const dist = (x1: number, y1: number) => Math.sqrt(x1 * x1 + y1 * y1);
+                    connectionPoints.sort((a, b) => {
+                        return dist(
+                            a.x - nodeData.position.x,
+                            a.y - nodeData.position.y
+                        ) - dist(
+                            b.x - nodeData.position.x,
+                            b.y - nodeData.position.y
+                        );
+                    })
+                    const connection = connectionPoints[0];
+                    if(connection.type === "input") {
+                        for(let wire of associatedWires) {
+                            const from = wire.start;
+                            const to = wire.end;
+                            if(to === nodeID) {
+                                editWire(wire.id, from, element.id, wire.startPort, connection.port);
+                            } else if(from === nodeID) {
+                                editWire(wire.id, to, element.id, wire.endPort, connection.port);
+                            }
+                        }
+                    } else {
+                        for(let wire of associatedWires) {
+                            const from = wire.start;
+                            const to = wire.end;
+                            if(from === nodeID) {
+                                editWire(wire.id, element.id, to, connection.port, wire.endPort);
+                            } else if(to === nodeID) {
+                                editWire(wire.id, element.id, from, connection.port, wire.startPort);
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    function cleanUp(from: string) {
+        checkOverlappingNodes(from);
+        pruneLonelyNodes();
+        convertNodeToGateConnection(from);
     }
 
     function deleteWire(id: string) {
@@ -192,8 +304,9 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
 
     function createGate(type: GateType) {
         let uuid = crypto.randomUUID();
+        const config = GateConfig[type];
         setElements((prev) => ({...prev, [uuid]: {
-            position: snapPoint({x: 0, y: 0}),
+            position: snapPoint({x: -config.width / 2, y: -config.height / 2}),
             type: "gate",
             gateType: type,
             id: uuid
@@ -221,11 +334,11 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         moveElement,
         connectNewWire,
         editWire,
-        checkOverlappingNodes,
         deleteElement,
         deleteWire,
         createGate,
-        createLabel
+        createLabel,
+        cleanUp
     }), [elements, wires]);
 
     return (

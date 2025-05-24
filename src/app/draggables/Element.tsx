@@ -1,6 +1,7 @@
 import { FederatedMouseEvent } from "pixi.js";
 import { useState, ReactNode } from "react";
 import { GRID_SNAP } from "../Constants";
+import { useElements } from "../contexts";
 
 interface ElementProps {
 	position: { x: number, y: number };
@@ -34,7 +35,7 @@ export function Element({
         e.stopPropagation();
     };
     const handlePointerMove = (e: FederatedMouseEvent) => {
-        if (!isDragging) return;
+        if (!isDragging) return false;
 		const dx = e.globalX - startMousePosition.x;
 		const dy = e.globalY - startMousePosition.y;
 		const newPosition = {
@@ -42,19 +43,18 @@ export function Element({
 			y: startPosition.y + dy
 		};
 		setPosition(newPosition);
-        e.stopPropagation();
+        //e.stopPropagation();
     };
 
     const handlePointerUp = (e: FederatedMouseEvent) => {
         setIsDragging(false);
-        e.stopPropagation();
     };
 
 	return (
 		<pixiContainer
 		x={position.x}
 		y={position.y}
-		eventMode='static'
+		eventMode='dynamic'
 		interactive
 		cursor='pointer'
 		onPointerDown={handlePointerDown}

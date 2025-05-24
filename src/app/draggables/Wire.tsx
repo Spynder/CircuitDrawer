@@ -1,10 +1,14 @@
 import { FederatedMouseEvent, Graphics } from "pixi.js";
 import { useState } from "react";
 import { useElements, useTransform } from "../contexts";
-import { WIRE_WIDTH } from "../Constants";
+import { GateConfig, WIRE_WIDTH } from "../Constants";
 
 interface WireProps {
     id: string;
+}
+
+function lerp(a: number, b: number, t: number) {
+    return a + (b-a)*t;
 }
 
 export function Wire({
@@ -12,7 +16,7 @@ export function Wire({
 }: Readonly<WireProps>) {
     const { elements, wires, addNewWire, createNode,
         editWire, moveElement, connectNewWire, deleteWire,
-        checkOverlappingNodes } = useElements();
+        cleanUp } = useElements();
     const { mouseToCanvas } = useTransform();
     const wire = wires[id];
 
@@ -21,14 +25,41 @@ export function Wire({
         const from = elements[wire.start];
         let fromPosition = from.position;
         if(from.type === "gate") {
+            const config = GateConfig[from.gateType!];
             fromPosition = {
-                x: from.position.x + 50,
-                y: from.position.y + 50
+                x: from.position.x + config.width,
+                y: from.position.y + config.outputs[wire.startPort].y
             };
         }
         const to = elements[wire.end];
+        let toPosition = to.position;
+        if(to.type === "gate") {
+            const config = GateConfig[to.gateType!];
+            if(config.inputs)
+                toPosition = {
+                    x: to.position.x,
+                    y: to.position.y + config.inputs[wire.endPort].y
+                };
+            else {
+                const connectedWires = Object.values(wires).filter(x => x.end === to.id);
+                if(connectedWires.length === 1) {
+                    toPosition = {
+                        x: to.position.x,
+                        y: to.position.y + config.height/2
+                    };
+                } else {
+                    const startRange = config.height/4;
+                    const endRange = config.height-startRange;
+                    toPosition = {
+                        x: to.position.x,
+                        y: to.position.y + lerp(startRange, endRange,
+                            connectedWires.findIndex(x => x.id === wire.id)/(connectedWires.length-1))
+                    }
+                }
+            }
+        }
         g.moveTo(fromPosition.x, fromPosition.y);
-        g.lineTo(to.position.x, to.position.y);
+        g.lineTo(toPosition.x, toPosition.y);
         g.stroke({
             color: "#000000",
             width: WIRE_WIDTH
@@ -50,7 +81,6 @@ export function Wire({
             }));
             editWire(id, wire.start, newNode);
             connectNewWire(newNode, wire.end);
-
 
             setLastWire(addNewWire(mouseToCanvas({
                 x: e.globalX,
@@ -106,8 +136,10 @@ export function Wire({
     const handlePointerUp = (e: FederatedMouseEvent) => {
         setIsDragging(false);
         if(lastWire?.end)
-            checkOverlappingNodes(lastWire.end);
-        e.stopPropagation();
+            cleanUp(lastWire.end);
+        if(lastWire?.start)
+            cleanUp(lastWire.start);
+        setIsDragging(false);
     };
     
     return (
