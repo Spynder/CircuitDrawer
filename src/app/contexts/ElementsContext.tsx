@@ -357,13 +357,6 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         return uuid;
     }
 
-    function setScreenCenter(point: {x: number, y: number}) {
-        setCenter({
-            x: point.x,
-            y: point.y
-        });
-    }
-
 
     const value = {
         elements,
@@ -380,7 +373,6 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         cleanUp,
         saveCircuit,
         loadCircuit,
-        setScreenCenter,
         setElementsApp: setApp
     };
 
