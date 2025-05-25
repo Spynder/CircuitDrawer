@@ -58,44 +58,46 @@ function ElementCreatorButtons() {
       <div className='flex flex-col gap-2 p-2'>
         <h1 className='text-center mx-auto text-3xl'>Конструктор схем</h1>
         <div className='flex gap-4'>
-          <h2 className='text-xl'>Добавить элементы:</h2>
-          <div className='flex gap-4'>
-            { ["and", "or", "not", "nor", "nand"].map((gate) => (
-              <button key={gate}
-              className={buttonClass}
-              onClick={() => createGate(gate as GateType)}>
-                {GateConfig[gate as GateType].name ?? gate}
+          <div className='flex flex-col gap-4'>
+            <h2 className='text-xl'>Добавить элементы:</h2>
+            <div className='flex gap-4'>
+              { ["and", "or", "not", "nor", "nand"].map((gate) => (
+                <button key={gate}
+                className={buttonClass}
+                onClick={() => createGate(gate as GateType)}>
+                  {GateConfig[gate as GateType].name ?? gate}
+                </button>
+              ))}
+              <div className='w-[2px] h-auto bg-white'/>
+              <button onClick={() => createLabel(label)}
+              disabled={label.length === 0}
+              className={buttonClass}>
+                Добавить надпись
               </button>
-            ))}
-            <div className='w-[2px] h-auto bg-white'/>
-            <button onClick={() => createLabel(label)}
-            disabled={label.length === 0}
-            className={buttonClass}>
-              Добавить надпись
-            </button>
-            <input type="text" value={label}
-            onChange={(e) => setLabel(e.target.value)} className='border-1 border-white py-2 px-4'/>
-          </div>
-          <div className='flex gap-4'>
-            
-            { ["D-trigger", "JK-trigger"].map((gate) => (
-              <button key={gate}
-              className={buttonClass}
-              onClick={() => createGate(gate as GateType)}>
-                {GateConfig[gate as GateType].name ?? gate}
-              </button>
-            ))}
-            <div className='w-[2px] h-auto bg-white'/>
+              <input type="text" value={label}
+              onChange={(e) => setLabel(e.target.value)} className='border-1 border-white py-2 px-4'/>
+            </div>
+            <div className='flex gap-4'>
+              
+              { ["D-trigger", "JK-trigger"].map((gate) => (
+                <button key={gate}
+                className={buttonClass}
+                onClick={() => createGate(gate as GateType)}>
+                  {GateConfig[gate as GateType].name ?? gate}
+                </button>
+              ))}
+              <div className='w-[2px] h-auto bg-white'/>
 
-            { ["SP", "Inverter", "Overflow", "DC"].map((gate) => (
-              <button key={gate}
-              className={buttonClass}
-              onClick={() => createGate(gate as GateType)}>
-                {GateConfig[gate as GateType].name ?? gate}
-              </button>
-            ))}
+              { ["SP", "Inverter", "Overflow", "DC"].map((gate) => (
+                <button key={gate}
+                className={buttonClass}
+                onClick={() => createGate(gate as GateType)}>
+                  {GateConfig[gate as GateType].name ?? gate}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className='flex flex-col'>
+          <div className='ms-auto flex flex-col gap-2'>
             <p>Чтобы провести провод, зажмите SHIFT.</p>
           </div>
         </div>
