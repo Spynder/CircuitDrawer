@@ -1,6 +1,6 @@
 import { ApplicationRef } from "@pixi/react";
 import { Container } from "pixi.js";
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 import { useElements } from "./ElementsContext";
 
 const ConfigContext = createContext<{
@@ -30,9 +30,9 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
     const [showGrid, setShowGrid] = useState(true);
     const [app, setApp] = useState<ApplicationRef | null>(null);
     const [containerFrame, setContainerFrame] = useState<Container | null>(null);
-    const {saveCircuit, loadCircuit, wires, elements} = useElements();
+    const { saveCircuit, loadCircuit } = useElements();
 
-    const value = useMemo(() => ({
+    const value = {
         showGrid,
         setShowGrid,
         downloadImage,
@@ -42,8 +42,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
         setContainerFrame,
         requestSave,
         requestLoad
-    }), [showGrid, app, containerFrame,
-        JSON.stringify(wires), JSON.stringify(elements)]);
+    };
 
     async function downloadImage() {
         if(!app || !containerFrame) return;

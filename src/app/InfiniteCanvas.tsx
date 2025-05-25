@@ -45,7 +45,7 @@ export function InfiniteCanvas({
 } : Readonly<InfiniteCanvasProps>) {
     const { position, setPosition, mouseToCanvas } = useTransform();
     const { showGrid, setApp, setContainerFrame } = useConfig();
-    const { addNewWire, moveElement, elements, wires, cleanUp } = useElements();
+    const { addNewWire, moveElement, elements, wires, cleanUp, setElementsApp } = useElements();
     const [isDragging, setIsDragging] = useState<"wire" | "drag" | false>(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [lastWire, setLastWire] = useState<{id: string, start: string, end: string}>();
@@ -53,6 +53,7 @@ export function InfiniteCanvas({
 
     useEffect(() => {
         setApp(applicationRef.current);
+        setElementsApp(applicationRef.current);
     }, [applicationRef]);
 
     const handlePointerDown = (e: FederatedMouseEvent) => {

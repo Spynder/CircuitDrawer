@@ -1,5 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { GRID_SNAP, GateConfig, GateType } from "../Constants";
+import { useTransform } from "./TransformContext";
+import { ApplicationRef } from "@pixi/react";
 
 interface ElementParams {
     position: { x: number, y: number };
@@ -39,7 +41,8 @@ const ElementsContext = createContext<{
     createLabel: (label: string) => string,
     cleanUp: (id: string) => void,
     saveCircuit: () => string,
-    loadCircuit: (data: string) => void
+    loadCircuit: (data: string) => void,
+    setElementsApp: (app: ApplicationRef | null) => void,
 }>({
     elements: {},
     wires: {},
@@ -66,7 +69,8 @@ const ElementsContext = createContext<{
     createLabel: () => "",
     cleanUp: () => {},
     saveCircuit: () => "",
-    loadCircuit: () => {}
+    loadCircuit: () => {},
+    setElementsApp: () => {}
 });
 
 function pointInRect(point: {x: number, y: number}, rect: {x: number, y: number, width: number, height: number}) {
@@ -75,8 +79,10 @@ function pointInRect(point: {x: number, y: number}, rect: {x: number, y: number,
 }
 
 export const ElementsProvider = ({ children }: { children: ReactNode }) => {
+    const { position } = useTransform();
     const [elements, setElements] = useState<{[key: string]: ElementParams}>({});
     const [wires, setWires] = useState<{[key: string]: WireParams}>({});
+    const [app, setApp] = useState<ApplicationRef | null>(null);
 
     function createNode(position: {x: number, y: number}) {
         let uuid = crypto.randomUUID();
@@ -324,9 +330,12 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
 
     function createGate(type: GateType) {
         let uuid = crypto.randomUUID();
-        const config = GateConfig[type];
+        const config = GateConfig[type]
         setElements((prev) => ({...prev, [uuid]: {
-            position: snapPoint({x: -config.width / 2, y: -config.height / 2}),
+            position: snapPoint({
+                x: -position.x + (app?.getCanvas()?.width ?? 0)/2 - config.width/2,
+                y: -position.y + (app?.getCanvas()?.height ?? 0)/2 - config.height/2
+            }),
             type: "gate",
             gateType: type,
             id: uuid
@@ -337,7 +346,10 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
     function createLabel(label: string) {
         let uuid = crypto.randomUUID();
         setElements((prev) => ({...prev, [uuid]: {
-            position: snapPoint({x: 0, y: 0}),
+            position: snapPoint({
+                x: -position.x + (app?.getCanvas()?.width ?? 0)/2,
+                y: -position.y + (app?.getCanvas()?.height ?? 0)/2
+            }),
             type: "label",
             label: label,
             id: uuid
@@ -345,8 +357,15 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         return uuid;
     }
 
+    function setScreenCenter(point: {x: number, y: number}) {
+        setCenter({
+            x: point.x,
+            y: point.y
+        });
+    }
 
-    const value = useMemo(() => ({
+
+    const value = {
         elements,
         wires,
         createNode,
@@ -360,8 +379,10 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
         createLabel,
         cleanUp,
         saveCircuit,
-        loadCircuit
-    }), [elements, wires]);
+        loadCircuit,
+        setScreenCenter,
+        setElementsApp: setApp
+    };
 
     return (
         <ElementsContext.Provider value={value}>
