@@ -13,19 +13,20 @@ export function WireNode({
     id
 }: Readonly<WireNodeProps>) {
     const { elements, wires, addNewWire, moveElement, cleanUp, deleteElement } = useElements();
-    const { position } = useTransform();
+    const { position, mouseToCanvas } = useTransform();
 
     function draw(g: Graphics) {
         g.clear();
-        let amount = Object.values(wires).filter(
-            wire => wire.start === id || wire.end === id).length;
+        const amount = Object.values(wires).filter(
+            wire => wire.start === id || wire.end === id
+        ).length;
         if(amount <= 2) {
             g.rect(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH*2, WIRE_WIDTH*2);
         } else {
             g.circle(0, 0, 5);
         }
         g.fill("#000");
-        if(amount === 2) g.alpha = 0;
+        g.alpha = amount === 2 ? 0 : 1;
     }
 
     const [isDragging, setIsDragging] = useState(false);
@@ -35,20 +36,20 @@ export function WireNode({
         console.log("down")
         if(e.shiftKey) {
             setIsDragging(true);
-            setLastWire(addNewWire({
-                x: e.globalX - position.x,
-                y: e.globalY - position.y
-            }, id));
+            setLastWire(addNewWire(mouseToCanvas({
+                x: e.globalX,
+                y: e.globalY
+            }), id));
             e.stopPropagation();
         }
     };
 
     const handlePointerMove = (e: FederatedMouseEvent) => {
         if (!isDragging) return;
-        moveElement(lastWire?.end!, {
-            x: e.globalX - position.x,
-            y: e.globalY - position.y
-        });
+        moveElement(lastWire?.end!, mouseToCanvas({
+            x: e.globalX,
+            y: e.globalY
+        }));
 
         e.stopPropagation();
     };
@@ -56,7 +57,13 @@ export function WireNode({
     // Handle mouse up
     const handlePointerUp = (e: FederatedMouseEvent) => {
         setIsDragging(false);
-        cleanUp(id);
+        const wire = wires[id];
+        if(wire) {
+            if(wire.start)
+                cleanUp(wire.start);
+            if(wire.end)
+                cleanUp(wire.end);
+        }
         if(lastWire?.start)
             cleanUp(lastWire.start);
         if(lastWire?.end)

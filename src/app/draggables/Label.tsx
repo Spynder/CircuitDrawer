@@ -1,6 +1,17 @@
 import { useElements } from "../contexts/ElementsContext";
 import { Element } from "./Element";
-import { Graphics } from "pixi.js";
+
+import {
+  extend,
+} from '@pixi/react';
+import {
+    HTMLText
+} from 'pixi.js';
+import { type UnprefixedPixiElements } from '@pixi/react'
+
+extend({
+    HTMLText
+});
 
 export interface LabelProps  {
     id: string;
@@ -13,16 +24,6 @@ export function Label({
 }: Readonly<LabelProps>) {
     const { elements, moveElement, deleteElement } = useElements();
     const label = elements[id].label;
-    
-    function draw(g: Graphics) {
-        g.clear();
-        g.roundRect(0, 0, 50, 100, 10);
-        g.fill("#ffffff");
-        g.stroke({
-            color: "#000000",
-            width: STROKE_WIDTH
-        });
-    }
 
     return (
         <Element
@@ -30,7 +31,8 @@ export function Label({
         setPosition={(point) => moveElement(id, point)}
         onRightClick={() => deleteElement(id)}
         >
-            <pixiText text={label} anchor={0.5}/>
+            {/* @ts-ignore */}
+            <pixiHTMLText text={label} anchor={0.5}/>
         </Element>
     )
 }

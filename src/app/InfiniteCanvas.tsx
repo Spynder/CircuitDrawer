@@ -10,7 +10,8 @@ import {
     Assets,
     Texture,
     TilingSprite,
-    FederatedMouseEvent
+    FederatedMouseEvent,
+    FederatedWheelEvent
 } from 'pixi.js';
 import {
     ReactNode,
@@ -43,7 +44,7 @@ interface InfiniteCanvasProps {
 export function InfiniteCanvas({
     resizeTo
 } : Readonly<InfiniteCanvasProps>) {
-    const { position, setPosition, mouseToCanvas } = useTransform();
+    const { position, setPosition, scale, setScale, mouseToCanvas } = useTransform();
     const { showGrid, setApp, setContainerFrame } = useConfig();
     const { addNewWire, moveElement, elements, wires, cleanUp, setElementsApp } = useElements();
     const [isDragging, setIsDragging] = useState<"wire" | "drag" | false>(false);
@@ -69,8 +70,8 @@ export function InfiniteCanvas({
             y: e.globalY
         });
         setDragStart({
-            x: -local.x,
-            y: -local.y
+            x: -local.x*scale,
+            y: -local.y*scale
         });
         e.stopPropagation();
     };
@@ -99,6 +100,36 @@ export function InfiniteCanvas({
             cleanUp(lastWire.start);
         if(lastWire?.end)
             cleanUp(lastWire.end);
+    };
+
+    const handleWheel = (e: FederatedWheelEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        // Get mouse position relative to canvas
+        const mouseX = e.globalX - position.x;
+        const mouseY = e.globalY - position.y;
+
+        // Calculate new scale
+        const scaleMin = 0.2;
+        const scaleMax = 5;
+
+        let zoomFactor = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out/in
+        //const newScale = scale * zoomFactor;
+        const newScale = Math.max(scaleMin, Math.min(scaleMax, scale * zoomFactor));
+        zoomFactor = newScale / scale;
+
+        if (scale === newScale) {
+            return;
+        }
+
+        // Update position to zoom towards mouse cursor
+        setPosition({
+            x: position.x + mouseX * (1 - zoomFactor),
+            y: position.y + mouseY * (1 - zoomFactor)
+        });
+
+        setScale(newScale);
     };
 
     const [texture, setTexture] = useState(Texture.EMPTY)
@@ -130,6 +161,10 @@ export function InfiniteCanvas({
                         x: position.x,
                         y: position.y
                     }}
+                    tileScale={{
+                        x: scale,
+                        y: scale
+                    }}
                     tint={showGrid ? "#ccc" : "#fff"}
                     
                     eventMode={'static'}
@@ -137,14 +172,15 @@ export function InfiniteCanvas({
                     onGlobalPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
 					onPointerUpOutside={handlePointerUp}
+					onWheel={handleWheel}
                 />
             }
-            <pixiGraphics x={position.x} y={position.y} draw={(g: Graphics) => {
+            <pixiGraphics x={position.x} y={position.y} scale={scale} draw={(g: Graphics) => {
                 g.clear();
                 g.circle(0, 0, 8);
                 g.fill("ccc");
             }} />
-            <pixiContainer x={position.x} y={position.y} ref={setContainerFrame}>
+            <pixiContainer x={position.x} y={position.y} scale={scale} ref={setContainerFrame}>
                 {
                     Object.values(wires).map((wire) => (
                         <Wire key={wire.id} id={wire.id} />

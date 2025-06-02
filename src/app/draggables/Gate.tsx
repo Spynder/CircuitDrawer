@@ -15,7 +15,7 @@ export function Gate({
     id
 }: Readonly<GateProps>) {
     const { elements, moveElement, deleteElement, addNewWire, cleanUp } = useElements();
-    const { position } = useTransform();
+    const { mouseToCanvas } = useTransform();
     const config = GateConfig[elements[id].gateType!];
     
     function draw(g: Graphics) {
@@ -43,20 +43,20 @@ export function Gate({
     const handlePointerDown = (e: FederatedMouseEvent, index: number) => {
         if(e.shiftKey) {
             setIsDragging(true);
-            setLastWire(addNewWire({
-                x: e.globalX - position.x,
-                y: e.globalY - position.y
-            }, id, index));
+            setLastWire(addNewWire(mouseToCanvas({
+                x: e.globalX,
+                y: e.globalY
+            }), id, index));
             e.stopPropagation();
         }
     };
 
     const handlePointerMove = (e: FederatedMouseEvent) => {
         if (!isDragging) return;
-        moveElement(lastWire?.end!, {
-            x: e.globalX - position.x,
-            y: e.globalY - position.y
-        });
+        moveElement(lastWire?.end!, mouseToCanvas({
+            x: e.globalX,
+            y: e.globalY
+        }));
 
         //e.stopPropagation();
     };

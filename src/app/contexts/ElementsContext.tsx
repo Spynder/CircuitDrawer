@@ -79,7 +79,7 @@ function pointInRect(point: {x: number, y: number}, rect: {x: number, y: number,
 }
 
 export const ElementsProvider = ({ children }: { children: ReactNode }) => {
-    const { position } = useTransform();
+    const { position, scale } = useTransform();
     const [elements, setElements] = useState<{[key: string]: ElementParams}>({});
     const [wires, setWires] = useState<{[key: string]: WireParams}>({});
     const [app, setApp] = useState<ApplicationRef | null>(null);
@@ -330,11 +330,15 @@ export const ElementsProvider = ({ children }: { children: ReactNode }) => {
 
     function createGate(type: GateType) {
         let uuid = crypto.randomUUID();
-        const config = GateConfig[type]
+        const config = GateConfig[type];
+        const screenCenter = {
+            x: (app?.getCanvas()?.width ?? 0)/2,
+            y: (app?.getCanvas()?.height ?? 0)/2
+        }
         setElements((prev) => ({...prev, [uuid]: {
             position: snapPoint({
-                x: -position.x + (app?.getCanvas()?.width ?? 0)/2 - config.width/2,
-                y: -position.y + (app?.getCanvas()?.height ?? 0)/2 - config.height/2
+                x: (screenCenter.x - position.x)/scale - config.width/2,
+                y: (screenCenter.y - position.y)/scale - config.height/2
             }),
             type: "gate",
             gateType: type,

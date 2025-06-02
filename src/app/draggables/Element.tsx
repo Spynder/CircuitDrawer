@@ -1,7 +1,7 @@
 import { FederatedMouseEvent } from "pixi.js";
 import { useState, ReactNode } from "react";
 import { GRID_SNAP } from "../Constants";
-import { useElements } from "../contexts";
+import { useElements, useTransform } from "../contexts";
 
 interface ElementProps {
 	position: { x: number, y: number };
@@ -19,6 +19,7 @@ export function Element({
 	const [isDragging, setIsDragging] = useState(false);
     const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
     const [startMousePosition, setStartMousePosition] = useState({ x: 0, y: 0 });
+	const { scale } = useTransform();
 
 	const handlePointerDown = (e: FederatedMouseEvent) => {
 		if(e.shiftKey) return;
@@ -39,8 +40,8 @@ export function Element({
 		const dx = e.globalX - startMousePosition.x;
 		const dy = e.globalY - startMousePosition.y;
 		const newPosition = {
-			x: startPosition.x + dx,
-			y: startPosition.y + dy
+			x: startPosition.x + dx/scale,
+			y: startPosition.y + dy/scale
 		};
 		setPosition(newPosition);
         //e.stopPropagation();

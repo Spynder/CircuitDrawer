@@ -28,6 +28,7 @@ import { GateConfig, GateType } from './Constants';
 
 export default function Home() {
   const ref = useRef<HTMLDivElement>(null);
+
   return (
     <div className="flex flex-col min-h-screen p-4
     font-[family-name:var(--font-geist-sans)]"
@@ -37,7 +38,8 @@ export default function Home() {
         <ElementsProvider>
           <ConfigProvider>
             <ElementCreatorButtons />
-            <div className='w-full h-auto grow' onContextMenu={(e) => e.preventDefault()}
+            <div className='w-full h-auto grow bg-red-200 overflow-hidden overscroll-contain'
+            onContextMenu={(e) => e.preventDefault()}
               ref={ref}>
               <Redactor resizeTo={ref}/>
             </div>
@@ -60,7 +62,7 @@ function ElementCreatorButtons() {
         <div className='flex gap-4'>
           <div className='flex flex-col gap-4'>
             <h2 className='text-xl'>Добавить элементы:</h2>
-            <div className='flex gap-4'>
+            <div className='flex gap-4 items-center'>
               { ["and", "or", "not", "nor", "nand"].map((gate) => (
                 <button key={gate}
                 className={buttonClass}
@@ -76,6 +78,10 @@ function ElementCreatorButtons() {
               </button>
               <input type="text" value={label}
               onChange={(e) => setLabel(e.target.value)} className='border-1 border-white py-2 px-4'/>
+              <div className='flex flex-col'>
+                <span>Поддерживает HTML-разметку!</span>
+                <span>Попробуйте <code>a&lt;sub&gt;2&lt;/sub&gt;</code></span>
+              </div>
             </div>
             <div className='flex gap-4'>
               
@@ -88,7 +94,7 @@ function ElementCreatorButtons() {
               ))}
               <div className='w-[2px] h-auto bg-white'/>
 
-              { ["SP", "Inverter", "Overflow", "DC"].map((gate) => (
+              { ["SP", "Inverter", "Overflow", "DC", "CORR"].map((gate) => (
                 <button key={gate}
                 className={buttonClass}
                 onClick={() => createGate(gate as GateType)}>

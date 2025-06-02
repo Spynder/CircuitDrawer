@@ -3,7 +3,8 @@ export const GRID_SNAP = 10;
 export const WIRE_WIDTH = 2;
 export type GateType = "and" | "or" | "not" | "nand" | "nor" |
     "D-trigger" | "JK-trigger" |
-    "SP" | "Inverter" | "Overflow" | "DC";
+    "SP" | "Inverter" | "Overflow" | "DC" |
+    "CORR";
 
 interface LabelDescription {
     label: string;
@@ -262,14 +263,28 @@ export const GateConfig: Record<GateType, GateDescription> = {
         ]
     },
     "SP": {
-        outputs: [
+        inputs: [
             {
                 inverted: false,
-                y: 30
+                y: 20
             },
             {
                 inverted: false,
                 y: 70
+            },
+            {
+                inverted: false,
+                y: 130
+            },
+        ],
+        outputs: [
+            {
+                inverted: false,
+                y: 20
+            },
+            {
+                inverted: false,
+                y: 130
             }
         ],
         name: "SP",
@@ -277,19 +292,19 @@ export const GateConfig: Record<GateType, GateDescription> = {
         height: 150,
         labels: [
             {
-                label: "S",
+                label: "P",
                 position: {x: 95, y: 5},
                 anchor: {x: 1, y: 0}
             },
             {
-                label: "P",
+                label: "S",
                 position: {x: 95, y: 145},
                 anchor: {x: 1, y: 1}
             },
             {
                 label: "SM",
-                position: {x: 40, y: 75},
-                anchor: {x: .5, y: .5}
+                position: {x: 40, y: 5},
+                anchor: {x: .5, y: 0}
             }
         ],
         lines: [
@@ -456,6 +471,54 @@ export const GateConfig: Record<GateType, GateDescription> = {
             {
                 label: "DC",
                 position: {x: 75, y: 5},
+                anchor: {x: .5, y: 0}
+            }
+        ],
+    },
+    "CORR": {
+        inputs: [
+            {
+                inverted: false,
+                y: 10
+            },
+            {
+                inverted: false,
+                y: 40
+            },
+            {
+                inverted: false,
+                y: 70
+            },
+            {
+                inverted: false,
+                y: 100
+            },
+            {
+                inverted: false,
+                y: 130
+            },
+        ],
+        outputs: [
+            {
+                inverted: false,
+                y: 10
+            },
+            {
+                inverted: false,
+                y: 70
+            },
+            {
+                inverted: false,
+                y: 130
+            },
+
+        ],
+        width: 100,
+        height: 140,
+        labels: [
+            {
+                label: "Кор",
+                position: {x: 50, y: 5},
                 anchor: {x: .5, y: 0}
             }
         ],
